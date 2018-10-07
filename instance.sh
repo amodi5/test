@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 RELEASE=$(cat /etc/yum.repos.d/latest-installed | awk '{print $1}')
 
 source /home/stack/overcloudrc.v3
@@ -29,11 +30,11 @@ fi
 SECID=$(openstack security group list | grep `openstack project show admin -f value -c id` | head -n 1 | awk '{print $2}')
 
 if [ "$RELEASE" -lt 12 ];then
-  nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0 2>/dev/null
-  nova secgroup-add-rule default tcp 22 22 0.0.0.0/0 2>/dev/null
+  nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0 2>/dev/null || true
+  nova secgroup-add-rule default tcp 22 22 0.0.0.0/0 2>/dev/null || true
 else
-  openstack security group rule create $SECID --protocol tcp --dst-port 22 --remote-ip 0.0.0.0/0 2>/dev/null
-  openstack security group rule create $SECID --protocol icmp --dst-port -1 --remote-ip 0.0.0.0/0 2>/dev/null
+  openstack security group rule create $SECID --protocol tcp --dst-port 22 --remote-ip 0.0.0.0/0 2>/dev/null || true
+  openstack security group rule create $SECID --protocol icmp --dst-port -1 --remote-ip 0.0.0.0/0 2>/dev/null || true
 fi
 
 if [ ! -f cirros-0.3.5-x86_64-disk.img ];then wget http://rhos-qe-mirror-tlv.usersys.redhat.com/images/cirros-0.3.5-x86_64-disk.img;fi
@@ -63,4 +64,4 @@ else
   nova floating-ip-associate test-$COUNTVAR $IP
 fi
 
-openstack server list
+openstack server list --long
